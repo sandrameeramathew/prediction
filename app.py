@@ -31,7 +31,7 @@ item_name =st.selectbox(
     'select item name',
     ('vada', 'samoosa', 'cream bun','pazhampori','bajji'))
 day = st.selectbox(
-    'select item name',
+    'select day',
     ('Monday', 'Tuesday', 'Wednesday','Thursday','Friday'))
 
 # Create new input
