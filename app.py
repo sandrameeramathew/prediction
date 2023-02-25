@@ -50,16 +50,6 @@ X_new = X_new[X.columns]
 y_new = model.predict(X_new)
 if st.button('Predict'):
     st.write('Predicted sales: ', y_new[0])
-    import streamlit as st
-import matplotlib.pyplot as plt
-
-plt.plot(sales_df['day'], y, label='Actual sales')
-plt.plot(sales_df['day'], y_pred, label='Predicted sales')
-plt.xlabel('Day')
-plt.ylabel('Sales')
-plt.title('Actual vs predicted sales over time')
-
-st.pyplot(fig)
-
+    
 
 
