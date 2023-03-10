@@ -83,7 +83,7 @@ for i in range(1,13):
 pred_row_scaled = scaler.transform(pred_row)
 x_pred = pred_row_scaled[:,1:]
 
-X_new = pd.DataFrame('date': [date_input])
+X_new = pd.DataFrame('date', date_input)
 X_new = pd.get_dummies(X_new, columns=['date'], prefix='date'
 
 # Add missing dummy variables
