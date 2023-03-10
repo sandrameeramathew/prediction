@@ -70,3 +70,22 @@ ax.set_xlabel("Date")
 ax.set_ylabel("Sales")
 ax.legend()
 st.pyplot(fig)
+
+# Add a date input widget
+selected_date = st.date_input("Select a date")
+
+# Convert the selected date to a pandas Period object
+selected_period = pd.Period(selected_date, freq="M")
+
+# Filter the test data to only include the selected date
+selected_test_data = test_data[test_data[:,0] == selected_period.to_timestamp()]
+
+# Make a prediction for the selected date
+lr_pre_selected = lr_model.predict(selected_test_data[:,1:])
+lr_pre_selected = lr_pre_selected.reshape(-1, 1)
+lr_pre_selected_set = np.concatenate([lr_pre_selected, selected_test_data[:,1:]], axis=1)
+lr_pre_selected_set = scaler.inverse_transform(lr_pre_selected_set)
+
+# Print the predicted sales for the selected date
+st.write("Predicted sales for {}: {}".format(selected_period.strftime("%B %Y"), lr_pre_selected_set[0][0]))
+
