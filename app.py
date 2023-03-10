@@ -74,18 +74,24 @@ st.pyplot(fig)
 date_input = st.date_input("Enter a date:")
 pred_date = pd.to_datetime(date_input).to_period("M")
 pred_row = pd.DataFrame([[np.nan]*(supervised_data.shape[1]-1)], columns=supervised_data.columns[1:])
-for i in range(1,13):
-  col_name='month' + str(i)
-  if pred_date.month - i <= 0:
-    pred_row[col_name] = np.nan
-  else:
-    pred_row[col_name] = supervised_data.loc[supervised_data['date']==pred_date-i]['sales_diff'].values
-pred_row_scaled = scaler.transform(pred_row)
-x_pred = pred_row_scaled[:,1:]
 
+for i in range(1,13):
+    col_name = 'month' + str(i)
+    if pred_date.month - i <= 0:
+        pred_row[col_name] = np.nan
+    else:
+        try:
+            pred_row[col_name] = supervised_data.loc[supervised_data['date'] == pred_date-i, 'sales_diff'].values
+        except KeyError:
+            st.error(f"Column {col_name} not found in supervised_data!")
+            st.stop()
+
+pred_row_scaled = scaler.transform(pred_row)
+x_pred = pred_row_scaled[:, 1:]
 
 lr_pred = lr_model.predict(x_pred)
 lr_pred_inv = scaler.inverse_transform(np.concatenate([lr_pred.reshape(-1, 1), x_pred], axis=1))
+
 st.write(f"Predicted sales for {date_input.strftime('%B %Y')}: {lr_pred_inv[0][0]:,.2f}")
 
 
