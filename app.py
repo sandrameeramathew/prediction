@@ -82,7 +82,24 @@ for i in range(1,13):
     pred_row[col_name] = supervised_data.loc[supervised_data['date']==pred_date-i]['sales_diff'].values
 pred_row_scaled = scaler.transform(pred_row)
 x_pred = pred_row_scaled[:,1:]
+
+X_new = pd.DataFrame('date': [date_input])
+X_new = pd.get_dummies(X_new, columns=['date'], prefix='date'
+
+# Add missing dummy variables
+missing_cols = set(X.columns) - set(X_new.columns)
+for col in missing_cols:
+    X_new[col] = 0
+
+# Ensure columns are in the same order
+X_new = X_new[X.columns]
 lr_pred = lr_model.predict(x_pred)
 lr_pred_inv = scaler.inverse_transform(np.concatenate([lr_pred.reshape(-1, 1), x_pred], axis=1))
 st.write(f"Predicted sales for {date_input.strftime('%B %Y')}: {lr_pred_inv[0][0]:,.2f}")
 
+
+
+# Predict the sales for the new input
+y_new = model.predict(X_new)
+if st.button('Predict'):
+    st.write('Predicted sales: ', y_new[0])
