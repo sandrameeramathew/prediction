@@ -75,6 +75,16 @@ date_input = st.date_input("Enter a date:")
 pred_date = pd.to_datetime(date_input).to_period("M")
 pred_row = pd.DataFrame([[np.nan]*(supervised_data.shape[1]-1)], columns=supervised_data.columns[1:])
 
+for i in range(1,13):
+    col_name = 'month' + str(i)
+    if pred_date.month - i <= 0:
+        pred_row[col_name] = np.nan
+    else:
+        try:
+            pred_row[col_name] = supervised_data.loc[supervised_data['date'] == pred_date-i, 'sales_diff'].values
+        except KeyError:
+            st.error(f"Column {col_name} not found in supervised_data!")
+            st.stop()
 
 pred_row_scaled = scaler.transform(pred_row)
 x_pred = pred_row_scaled[:, 1:]
