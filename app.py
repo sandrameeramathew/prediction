@@ -71,21 +71,18 @@ ax.set_ylabel("Sales")
 ax.legend()
 st.pyplot(fig)
 
-# Add a date input widget
-selected_date = st.date_input("Select a date")
-
-# Convert the selected date to a pandas Period object
-selected_period = pd.Period(selected_date, freq="M")
-
-# Filter the test data to only include the selected date
-selected_test_data = test_data[test_data[:,0] == selected_period.to_timestamp()]
-
-# Make a prediction for the selected date
-lr_pre_selected = lr_model.predict(selected_test_data[:,1:])
-lr_pre_selected = lr_pre_selected.reshape(-1, 1)
-lr_pre_selected_set = np.concatenate([lr_pre_selected, selected_test_data[:,1:]], axis=1)
-lr_pre_selected_set = scaler.inverse_transform(lr_pre_selected_set)
-
-# Print the predicted sales for the selected date
-st.write("Predicted sales for {}: {}".format(selected_period.strftime("%B %Y"), lr_pre_selected_set[0][0]))
+date_input = st.date_input("Enter a date:")
+pred_date = pd.to_datetime(date_input).to_period("M")
+pred_row = pd.DataFrame([[np.nan]*(supervised_data.shape[1]-1)], columns=supervised_data.columns[1:])
+for i in range(1,13):
+  col_name='month' + str(i)
+  if pred_date.month - i <= 0:
+    pred_row[col_name] = np.nan
+  else:
+    pred_row[col_name] = supervised_data.loc[supervised_data['date']==pred_date-i]['sales_diff'].values
+pred_row_scaled = scaler.transform(pred_row)
+x_pred = pred_row_scaled[:,1:]
+lr_pred = lr_model.predict(x_pred)
+lr_pred_inv = scaler.inverse_transform(np.concatenate([lr_pred.reshape(-1, 1), x_pred], axis=1))
+st.write(f"Predicted sales for {date_input.strftime('%B %Y')}: {lr_pred_inv[0][0]:,.2f}")
 
