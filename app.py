@@ -71,30 +71,22 @@ ax.set_ylabel("Sales")
 ax.legend()
 st.pyplot(fig)
 
+user_input = st.number_input('Enter a value for the first month:')
+# Scale the user input and create the prediction input
+scaled_input = scaler.transform([[user_input, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]])
+predict_input = scaled_input[:,1:]
 
-# Create an input field for the user to enter the date or month
-user_input = st.text_input("Enter a date or month in the format YYYY-MM", "2023-04")
+# Make prediction using linear regression model
+lr_model= LinearRegression()
+lr_model.fit(x_train, y_train) 
+lr_pre= lr_model.predict(predict_input)
+lr_pre =lr_pre.reshape(-1, 1)
+lr_pre_test_set = np.concatenate([lr_pre, predict_input], axis=1) 
+lr_pre_test_set = scaler.inverse_transform(lr_pre_test_set)
 
-# Convert user input to a datetime object
-user_date = pd.to_datetime(user_input)
-
-# Create a DataFrame with the user input
-user_df = pd.DataFrame({'date': [user_date]})
-
-# Transform the user input using the same scaler used for the training data
-user_data = user_df.merge(monthly_sales[['date', 'sales_diff']], on='date', how='left').fillna(0)
-user_data = user_data.drop('date', axis=1)
-user_data = scaler.transform(user_data)
-
-# Make a prediction using the trained linear regression model
-lr_prediction = lr_model.predict(user_data)
-lr_prediction = scaler.inverse_transform(np.concatenate([lr_prediction.reshape(-1,1), user_data], axis=1))
-
-# Format the prediction as a string
-prediction_string = f"Predicted sales for {user_input}: ${lr_prediction[0][0]:,.2f}"
-
-# Show the prediction to the user
-st.write(prediction_string)
+# Display prediction result
+st.write('The predicted sales for the next 12 months based on your input:')
+st.write(lr_pre_test_set)
 
 
 
