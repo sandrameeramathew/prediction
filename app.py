@@ -71,28 +71,31 @@ ax.set_ylabel("Sales")
 ax.legend()
 st.pyplot(fig)
 
-date_input = st.date_input("Enter a date:")
-pred_date = pd.to_datetime(date_input).to_period("M")
-pred_row = pd.DataFrame([[np.nan]*(supervised_data.shape[1]-1)], columns=supervised_data.columns[1:])
 
-for i in range(1,13):
-    col_name = 'month' + str(i)
-    if pred_date.month - i <= 0:
-        pred_row[col_name] = np.nan
-    else:
-        try:
-            pred_row[col_name] = supervised_data.loc[supervised_data['date'] == pred_date-i, 'sales_diff'].values
-        except KeyError:
-            st.error(f"Column {col_name} not found in supervised_data!")
-            st.stop()
+# Create an input field for the user to enter the date or month
+user_input = st.text_input("Enter a date or month in the format YYYY-MM", "2023-04")
 
-pred_row_scaled = scaler.transform(pred_row)
-x_pred = pred_row_scaled[:, 1:]
+# Convert user input to a datetime object
+user_date = pd.to_datetime(user_input)
 
-lr_pred = lr_model.predict(x_pred)
-lr_pred_inv = scaler.inverse_transform(np.concatenate([lr_pred.reshape(-1, 1), x_pred], axis=1))
+# Create a DataFrame with the user input
+user_df = pd.DataFrame({'date': [user_date]})
 
-st.write(f"Predicted sales for {date_input.strftime('%B %Y')}: {lr_pred_inv[0][0]:,.2f}")
+# Transform the user input using the same scaler used for the training data
+user_data = user_df.merge(monthly_sales[['date', 'sales_diff']], on='date', how='left').fillna(0)
+user_data = user_data.drop('date', axis=1)
+user_data = scaler.transform(user_data)
+
+# Make a prediction using the trained linear regression model
+lr_prediction = lr_model.predict(user_data)
+lr_prediction = scaler.inverse_transform(np.concatenate([lr_prediction.reshape(-1,1), user_data], axis=1))
+
+# Format the prediction as a string
+prediction_string = f"Predicted sales for {user_input}: ${lr_prediction[0][0]:,.2f}"
+
+# Show the prediction to the user
+st.write(prediction_string)
+
 
 
 
