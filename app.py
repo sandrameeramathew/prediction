@@ -71,24 +71,26 @@ ax.set_ylabel("Sales")
 ax.legend()
 st.pyplot(fig)
 
-user_input = st.number_input('Enter a value for the first month:')
-# Scale the user input and create the prediction input
-scaled_input = scaler.transform([[user_input, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]])
-predict_input = scaled_input[:,1:]
 
-# Make prediction using linear regression model
-lr_model= LinearRegression()
-lr_model.fit(x_train, y_train) 
-lr_pre= lr_model.predict(predict_input)
-lr_pre =lr_pre.reshape(-1, 1)
-lr_pre_test_set = np.concatenate([lr_pre, predict_input], axis=1) 
-lr_pre_test_set = scaler.inverse_transform(lr_pre_test_set)
+date_input = st.date_input("Enter a date:")
+pred_date = pd.to_datetime(date_input).to_period("M")
+pred_row = pd.DataFrame([[np.nan]*(supervised_data.shape[1]-1)], columns=supervised_data.columns[1:])
 
-# Display prediction result
-st.write('The predicted sales for the next 12 months based on your input:')
-st.write(lr_pre_test_set)
+for i in range(1,13):
+    col_name = 'month' + str(i)
+    if pred_date.month - i <= 0:
+        pred_row[col_name] = np.nan
+    else:
+        try:
+            pred_row[col_name] = supervised_data.loc[supervised_data['date'] == pred_date-i, 'sales_diff'].values
+        except KeyError:
+            st.error(f"Column {col_name} not found in supervised_data!")
+            st.stop()
 
+pred_row_scaled = scaler.transform(pred_row)
+x_pred = pred_row_scaled[:, 1:]
 
+lr_pred = lr_model.predict(x_pred)
+lr_pred_inv = scaler.inverse_transform(np.concatenate([lr_pred.reshape(-1, 1), x_pred], axis=1))
 
-
-
+st.write(f"Predicted sales for {date_input.strftime('%B %Y')}: {lr_pred_inv[0][0]:,.2f}")
